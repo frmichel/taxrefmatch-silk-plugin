@@ -5,5 +5,8 @@ import org.silkframework.runtime.plugin.PluginModule
 class CustomPlugins extends PluginModule {
 
   override def pluginClasses =
-    classOf[TaxrefSilkPlugin] :: Nil
+    classOf[TaxrefNormalize] ::
+    classOf[TaxrefNormalizeNoDate] ::
+    classOf[TaxrefNormalizeAuthor] ::
+    Nil
 }

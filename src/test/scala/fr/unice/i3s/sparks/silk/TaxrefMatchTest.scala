@@ -41,6 +41,6 @@ class TaxrefMatchTest {
     assertEquals("AB12CDEF", TaxrefMatch.normalize("ab12cdef"))
     assertEquals("BARBATIA BISTRIGATA DUNKER 1866", TaxrefMatch.normalize("Barbatia [?]	 bistrigata  - (Dunker, 1866) "))
     assertEquals("BRASSICA REPANDA REPANDA AA BB 1866", TaxrefMatch.normalize("Brassica repanda subsp. repanda <i>(Aa &amp; Bb , 1866)</i>"))
-    assertEquals("BRASSICA AAxBB CC DD", TaxrefMatch.normalize("""Brassica "Aa"×Bb «cc» ˝dd ˝ … """))
+    assertEquals("BRASSICA AA BB CC DD", TaxrefMatch.normalize("""Brassica "Aa"×Bb «cc» ˝dd ˝ … """))
   }
 }

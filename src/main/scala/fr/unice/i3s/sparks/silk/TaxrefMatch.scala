@@ -2,6 +2,7 @@ package fr.unice.i3s.sparks.silk
 
 import java.util.logging.Logger
 import java.util.regex.Pattern
+import java.util.logging.Level
 
 /**
  * @author Franck Michel, I3S laboratory (this Scala port)
@@ -10,10 +11,10 @@ import java.util.regex.Pattern
  */
 object TaxrefMatch {
 
-  val RXSecondTermInRoundBrackets = Pattern.compile("""^([^\(\)\s]+) (\([^\s]+\)) (.+)""")
-  val RXSecondTermInSquareBrackets = Pattern.compile("""^([^\[\]\s]+) (\[[^\s]+\]) (.+)""")
+  val RXSecondTermInRoundBrackets = Pattern.compile("""^([^\(\)\s]+) (\([^\(\)]+\)) (.+)""")
+  val RXSecondTermInSquareBrackets = Pattern.compile("""^([^\[\]\s]+) (\[[^\[\]]+\]) (.+)""")
 
-  val logger = Logger.getLogger(getClass.getName)
+  val logger = Logger.getLogger(this.getClass.getName)
 
   /**
    * Replace any sequence of whitespace characters with a single space.
@@ -63,33 +64,94 @@ object TaxrefMatch {
     }).toList.mkString
   }
 
+
   /**
-   * Produce a normalized version of an input string (scientific name components)
+   * Normalize the authority part of a taxon name
    * <ol>
-   * <li>Remove known text elements e.g. 'aff.', 'cf.', 'subsp.', subgenus if enclosed in roud brackets </li>
-   * <li>Remove accented and non A-Z characters other than full stops (in scientific name portions)</li>
-   * <li>Return uppercase scientific name (genus + species only) plus unaltered (presumed) authority, e.g.:
-   * - Anabaena cf. flos-aquae Ralfs ex Born. et Flah. => ANABAENA FLOSAQUAE Ralfs ex Born. et Flah.<br>
-   * - Abisara lemée-pauli => ABISARA LEMEEPAULI<br>
-   * - Fuc/us Vesiculos2us => FUCUS VESICULOSUS<br>
-   * - Buffo ignicolor Lacépède, 1788 => BUFFO IGNICOLOR Lacépède, 1788<br>
-   * - Barbatia (Mesocibota) bistrigata (Dunker, 1866) => BARBATIA BISTRIGATA (Dunker, 1866)<br>
-   * </li>
-   * <li>This version does not handle genus+author, or genus+species+infraspecies: second "good" term is
-   *     presumed to be species epithet, anything after is considered to be start of the authority</li>
-   * <li>There is a separate function "normalize_auth" for normalizing authorities when required
-   *     (e.g. for authority comparisons)</li>
-   *  </ol>
+   * <li>Perform authority expansion of known abbreviated author names (Linneaus and de Candolle)</li>
+   * <li>Recognise "and", "et", "&" as equivalents (special case for "et al.") - all normalized to "&"</li>
+   * <li>Remove comma before year, e.g. "Smith 1980" and "Smith, 1980" are equivalents</li>
+   * <li>Recognise (e.g.) "F. J. R. Taylor, 1980" and "F.J.R. Taylor, 1980" as equivalents</li>
+   * </ol>
    *
    * @param name input name presumably genus, genus+species, or genus+species+authority
-   * @param withDate indicates whether the year is part of the authority (default true)
+   * @return name with normalized authority
+   */
+  def normalizeAuthor(name: String): String = {
+    var tmpName = name
+
+    // Replace any sequence of white spaces by a single ' ', trim leading/trailing spaces
+    tmpName = normalizeSpaces(tmpName).trim
+
+    tmpName = tmpName.replaceAll(""" L\.$""", " Linnaeus")
+    tmpName = tmpName.replaceAllLiterally("(L.)", "(Linnaeus)")
+    tmpName = tmpName.replaceAllLiterally("L., 1", "Linnaeus, 1")
+    tmpName = tmpName.replaceAllLiterally("L. 1", "Linnaeus, 1")
+    tmpName = tmpName.replaceAllLiterally("Linné", "Linnaeus")
+    tmpName = tmpName.replaceAllLiterally("linné", "Linnaeus")
+
+    tmpName = tmpName.replaceAll(""" D\.C\.$""", " de Candolle")
+    tmpName = tmpName.replaceAllLiterally("(D.C.)", "(de Candolle)")
+    tmpName = tmpName.replaceAllLiterally("D.C., 1", "de Candolle, 1")
+    tmpName = tmpName.replaceAllLiterally("D.C. 1", "de Candolle, 1")
+
+    // Normalize "et", "and" to ampersand (leave "et al" as is)
+    tmpName = tmpName.replaceAllLiterally(" et al", " __ETAL_MARKER__")
+    tmpName = tmpName.replaceAllLiterally(" et ", " & ")
+    tmpName = tmpName.replaceAllLiterally(" and ", " & ")
+    tmpName = tmpName.replaceAllLiterally(" __ETAL_MARKER__", " et al")
+
+    // Remove commas before dates (only)
+    tmpName = tmpName.replaceAllLiterally(", 17", " 17")
+    tmpName = tmpName.replaceAllLiterally(",17", " 17")
+    tmpName = tmpName.replaceAllLiterally(", 18", " 18")
+    tmpName = tmpName.replaceAllLiterally(",18", " 18")
+    tmpName = tmpName.replaceAllLiterally(", 19", " 19")
+    tmpName = tmpName.replaceAllLiterally(",19", " 19")
+    tmpName = tmpName.replaceAllLiterally(", 20", " 20")
+    tmpName = tmpName.replaceAllLiterally(",20", " 20")
+
+    tmpName = normalizeSpaces(tmpName).trim
+    tmpName = tmpName.replaceAllLiterally("-", " ")
+
+    tmpName
+  }
+
+  /**
+   * Produce a normalized version of an input string (scientific name and authority)
+   * <ol>
+   * <li>Normalize white spaces (cf. normalizeSpaces)</li>
+   * <li>Normalize author names (cf. normalizeAuthor)</li>
+   * <li>Remove known text elements e.g. 'aff.', 'cf.', 'subsp.', 'subgenus'</li>
+   * <li>Remove second term (only) in round or square brackets</li>
+   * <li>Replace accented letters with non-accented equivalent letters</li>
+   * <li>Remove any chars other than A-Z, 0-9, space, and full stop</li>
+   * <li>Remove HTML tags and &AMP;</li>
+   * <li>Return uppercase name</li>
+   *  </ol>
+   * @note This version does not handle genus+author, or genus+species+infraspecies: second "good" term is
+   *       presumed to be species epithet, anything after is considered to be start of the authority
+   * @note There is a separate function "normalize_auth" for normalizing authorities when required
+   *       (e.g. for authority comparisons)
+   *       
+   * @example
+   * - Anabaena cf. flos-aquae Ralfs ex Born. et Flah. => ANABAENA FLOSAQUAE RAFLS EX BOEN. ET FLAH.<br>
+   * - Abisara lemée-pauli => ABISARA LEMEEPAULI<br>
+   * - Fuc/us Vesiculos2us => FUCUS VESICULOSUS<br>
+   * - Buffo ignicolor Lacépède, 1788 => BUFFO IGNICOLOR LACEPEDE 1788<br>
+   * - Barbatia (Mesocibota) bistrigata (Dunker, 1866) => BARBATIA BISTRIGATA DUNKER 1866<br>
+   * 
+   * @param name input name presumably genus, genus+species, or genus+species+authority
+   * @param withDate indicates whether the year is part of the authority (default true). If false,
+   * filter out any character 0 to 9.
    * @return normalized version of input name
    */
   def normalize(name: String, withDate: Boolean = true): String = {
     var tmpName = name
 
-    // Replace any sequence of white spaces by a single ' ', trim leading/trailing spaces
+    // Replace white spaces and author names
     tmpName = normalizeSpaces(tmpName).trim
+    tmpName = normalizeAuthor(tmpName).trim
     tmpName = tmpName.toUpperCase
 
     // Replace any HTML ampersands
@@ -97,13 +159,13 @@ object TaxrefMatch {
 
     // Replace special characters
     // See list of UTF-16 codes at http://www.fileformat.info/info/charset/UTF-16/list.htm
-    tmpName = tmpName.replaceAllLiterally("\u00df", "beta") // lowercase beta: ß
-    tmpName = tmpName.replaceAllLiterally("\u03b2", "beta") // lowercase beta: β
-    tmpName = tmpName.replaceAllLiterally("\u0392", "beta") // uppercase beta: Β
+    tmpName = tmpName.replaceAllLiterally("\u00df", "BETA") // lowercase beta: ß
+    tmpName = tmpName.replaceAllLiterally("\u03b2", "BETA") // lowercase beta: β
+    tmpName = tmpName.replaceAllLiterally("\u0392", "BETA") // uppercase beta: Β
 
     tmpName = tmpName.map(x => x match {
       case '\u2026' => ' ' // ellipsis (three dots in one): …
-      case '\u00d7' => 'x' // multiplication sign: ×
+      case '\u00d7' => ' ' // multiplication sign: ×
       case '\u0027' => "" // quote: '
       case '\u0022' => "" // quotation mark: " (double quote)
       case '\u02bb' => "" // turned comma: ʻ
@@ -127,20 +189,20 @@ object TaxrefMatch {
     tmpName = extractBracketTerm(tmpName)
 
     // Drop indicators of questionable id's, subspecies, varieties
-    /* tmpName = tmpName.replaceAllLiterally(""" CF """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" CF. """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" NEAR """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" AFF """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" AFF. """, " ") */
-    tmpName = tmpName.replaceAllLiterally(""" SP.""", " ")
-    tmpName = tmpName.replaceAllLiterally(""" SPP.""", " ")
-    tmpName = tmpName.replaceAllLiterally(""" SPP """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" SSP.""", " ")
-    tmpName = tmpName.replaceAllLiterally(""" SUBSP.""", " ")
-    tmpName = tmpName.replaceAllLiterally(""" F. """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" VAR. """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" FORM """, " ")
-    tmpName = tmpName.replaceAllLiterally(""" SUVAR. """, " ")
+    /* tmpName = tmpName.replaceAllLiterally(" CF ", " ")
+    tmpName = tmpName.replaceAllLiterally(" CF. ", " ")
+    tmpName = tmpName.replaceAllLiterally(" NEAR ", " ")
+    tmpName = tmpName.replaceAllLiterally(" AFF ", " ")
+    tmpName = tmpName.replaceAllLiterally(" AFF. ", " ") */
+    tmpName = tmpName.replaceAllLiterally(" SP.", " ")
+    tmpName = tmpName.replaceAllLiterally(" SPP.", " ")
+    tmpName = tmpName.replaceAllLiterally(" SPP ", " ")
+    tmpName = tmpName.replaceAllLiterally(" SSP.", " ")
+    tmpName = tmpName.replaceAllLiterally(" SUBSP.", " ")
+    tmpName = tmpName.replaceAllLiterally(" F. ", " ")
+    tmpName = tmpName.replaceAllLiterally(" VAR. ", " ")
+    tmpName = tmpName.replaceAllLiterally(" FORM ", " ")
+    tmpName = tmpName.replaceAllLiterally(" SUVAR. ", " ")
 
     // Replace any accented characters
     tmpName = tmpName.map(x => x match {
@@ -195,41 +257,13 @@ object TaxrefMatch {
       case c => c
     }).toList.mkString
 
-    // Drop any chars other than A-Z, space, and full stop
-    tmpName = filterCharacters(tmpName)
+    // Drop any chars other than A-Z, figures if withDate is set, space, and full stop
+    tmpName = filterCharacters(tmpName, withDate)
 
     // Reduce any new multiple internal spaces to single space
     tmpName = normalizeSpaces(tmpName).trim
 
-    tmpName
-  }
-
-  /**
-   * Produce a normalized version of authority of a taxon name
-   * <ol>
-   * <li>Perform authority expension of known abbreviated authornames (Linneaus and de Candolle)</li>
-   * <li>Recognise "and", "et", "&" as equivalents (special case for "et al.") - all normalized to "&"</li>
-   * <li>Remove comma before year, e.g. "Smith 1980" and "Smith, 1980" are equivalents</li>
-   * <li>Recognise (e.g.) "F. J. R. Taylor, 1980" and "F.J.R. Taylor, 1980" as equivalents</li>
-   * <li>Returns uppercase string, diacritical marks intact
-   * </ol>
-   *
-   * @param name input name presumably genus, genus+species, or genus+species+authority
-   * @return normalized version of input name
-   */
-  def normalizeAuthor(name: String): String = {
-    var tmpName: String = name
-
-    // Replace any sequence of white spaces by a single ' ', trim leading/trailing spaces
-    tmpName = normalizeSpaces(tmpName).trim
-
-    tmpName = tmpName.replaceAll(""" L\.$""", " Linnaeus")
-    tmpName = tmpName.replaceAllLiterally("""(L.)""", "(Linnaeus)")
-    tmpName = tmpName.replaceAllLiterally("""L., 1""", "Linnaeus, 1")
-    tmpName = tmpName.replaceAllLiterally("""L. 1""", "Linnaeus, 1")
-    tmpName = tmpName.replaceAllLiterally("""Linné""", "Linnaeus")
-    tmpName = tmpName.replaceAllLiterally("""linné""", "Linnaeus")
-
+    //logger.log(Level.FINE, "Normalized [" + name + "] into [" + tmpName + "]")
     tmpName
   }
 }
