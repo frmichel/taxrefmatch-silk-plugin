@@ -1,0 +1,139 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>fr.unice.i3s.sparks</groupId>
+	<artifactId>taxrefmatch-silk-plugin</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>TAXREF-MATCH Silk plugin</name>
+
+
+	<organization>
+		<name>I3S laboratory - CNRS, University of Nice-Sophia</name>
+		<url>http://i3s.unice.fr/</url>
+	</organization>
+	<url>https://github.com/frmichel/taxrefmatch-silk-plugin/</url>
+	<description></description>
+	<licenses>
+		<license>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<name>Apache 2.0</name>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Franck Michel</name>
+			<email>franck.michel@cnrs.fr</email>
+			<organization>CNRS</organization>
+			<timezone>Europe/Paris</timezone>
+		</developer>
+	</developers>
+
+	<properties>
+		<javaVersion>8</javaVersion>
+		<maven.compiler.source>1.${javaVersion}</maven.compiler.source>
+		<maven.compiler.target>1.${javaVersion}</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<repositories>
+		<repository>
+			<name>Third-party libraries</name>
+			<id>third-party</id>
+			<url>http://nexus.i3s.unice.fr/content/repositories/i3s-public/</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>2.11.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.silkframework</groupId>
+			<artifactId>silk</artifactId>
+			<version>2.7.1</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to make Eclipse plugin m2e ignore 
+					the goals of plugin maven-scala-plugin for which it has no translator. 
+					This has no influence on the result of the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.scala-tools</groupId>
+										<artifactId>maven-scala-plugin</artifactId>
+										<versionRange>[2.15.2,)</versionRange>
+										<goals>
+											<goal>compile</goal>
+											<goal>testCompile</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<sourceDirectory>src/main/scala</sourceDirectory>
+		<testSourceDirectory>src/test/scala</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.scala-tools</groupId>
+				<artifactId>maven-scala-plugin</artifactId>
+				<version>2.15.2</version>
+				<configuration>
+					<scalaVersion>${scala.version}</scalaVersion>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.5.1</version>
+				<configuration>
+					<source>1.${javaVersion}</source>
+					<target>1.${javaVersion}</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
