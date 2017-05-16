@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Silk>
+
+	<!-- Compare the normalized name (no authirity) -->
+	<Prefixes>
+		<Prefix id="rdf" 	namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+		<Prefix id="rdfs" 	namespace="http://www.w3.org/2000/01/rdf-schema#"/>
+		<Prefix id="skos" 	namespace="http://www.w3.org/2004/02/skos/core#"/>
+		<Prefix id="skosxl"	namespace="http://www.w3.org/2008/05/skos-xl#"/>
+        <Prefix id="owl"    namespace="http://www.w3.org/2002/07/owl#"/>
+
+		<Prefix id="taxrefrk" namespace="http://taxref.mnhn.fr/lod/taxrank#"/>
+		<Prefix id="nt" 	namespace="http://purl.obolibrary.org/obo/ncbitaxon#"/>
+		<Prefix id="obo" 	namespace="http://purl.obolibrary.org/obo/"/>
+	</Prefixes>
+
+	<DataSources>
+		<Dataset id="taxref" type="file">
+		  <Param name="file" value="TAXREF-SKOS/Taxref10.ttl"/>
+		  <Param name="format" value="TURTLE"/>
+		</Dataset>
+
+		<Dataset id="ncbi" type="file">
+		  <Param name="file" value="ReferenceOntologies/NCBITaxon/ncbitaxon.owl"/>
+		  <Param name="format" value="RDF/XML"/>
+		</Dataset>
+	</DataSources>
+  
+	<Interlinks>
+	
+		<Interlink id="taxref">
+
+            <SourceDataset dataSource="taxref" var="a">
+                <RestrictTo>
+                    ?a rdf:type skos:Concept .
+                    { ?a nt:has_rank taxrefrk:Genus . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubGenus . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Section . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSection . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Series . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSeries . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Agregate . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Species . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SemiSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:MicroSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Natio . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Varietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubVarietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Forma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubForma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:FormaSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Linea . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Clone . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Race . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Cultivar . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Morpha . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Abberatio . }
+                </RestrictTo>
+            </SourceDataset>
+
+            <TargetDataset dataSource="ncbi" var="b">
+                <RestrictTo>
+                    ?b rdf:type owl:Class .
+                    { ?b nt:has_rank obo:NCBITaxon_genus . }
+                    UNION
+                    { ?b nt:has_rank obo:NCBITaxon_subgenus . }
+                    UNION
+                    { ?b nt:has_rank obo:NCBITaxon_species . }
+                    UNION
+                    { ?b nt:has_rank obo:NCBITaxon_subspecies . }
+                    UNION
+                    { ?b nt:has_rank obo:NCBITaxon_varietas . }
+                </RestrictTo>
+            </TargetDataset>
+			  
+			<LinkageRule linkType="rdfs:seeAlso">
+				<Compare metric="equality">
+
+					<TransformInput function="taxrefNormalizeNoDate">
+						<Input path="?a/skosxl:prefLabel/skosxl:literalForm"/>
+					</TransformInput>
+
+					<TransformInput function="taxrefNormalizeNoDate">
+						<Input path="?b/rdfs:label"/>
+					</TransformInput>
+
+				</Compare>
+			</LinkageRule>
+
+		</Interlink>
+	</Interlinks>
+  
+	<Outputs>
+		<Output type="file">
+			<Param name="file" value="links-ncbi-3-equality-name.nt"/>
+			<Param name="format" value="N-Triples"/>
+		</Output>
+	</Outputs>
+	
+</Silk>
+

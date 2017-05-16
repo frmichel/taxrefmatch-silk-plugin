@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Silk>
+	<!-- Compare the normalized name (no authority) with Jaro distance -->
+    <Prefixes>
+        <Prefix id="rdf"    namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        <Prefix id="rdfs"   namespace="http://www.w3.org/2000/01/rdf-schema#"/>
+        <Prefix id="skos"   namespace="http://www.w3.org/2004/02/skos/core#"/>
+        <Prefix id="skosxl"	namespace="http://www.w3.org/2008/05/skos-xl#"/>
+
+        <Prefix id="taxrefrk" namespace="http://taxref.mnhn.fr/lod/taxrank#"/>
+        <Prefix id="nt"     namespace="http://purl.obolibrary.org/obo/ncbitaxon#"/>
+		<Prefix id="gs"	    namespace="http://rdf.geospecies.org/ont/geospecies#"/>
+    </Prefixes>
+
+    <DataSources>
+        <Dataset id="taxref" type="file">
+          <Param name="file" value="TAXREF-SKOS/Taxref10.ttl"/>
+          <Param name="format" value="TURTLE"/>
+        </Dataset>
+
+		<Dataset id="geospecies" type="file">
+		  <Param name="file" value="ReferenceOntologies/geospecies.rdf"/>
+		  <Param name="format" value="RDF/XML"/>
+		</Dataset>
+    </DataSources>
+  
+    <Interlinks>
+    
+        <Interlink id="taxref">
+
+            <SourceDataset dataSource="taxref" var="a">
+                <RestrictTo>
+                    ?a rdf:type skos:Concept .
+                    { ?a nt:has_rank taxrefrk:Species . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SemiSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:MicroSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Natio . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Varietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubVarietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Forma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubForma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:FormaSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Linea . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Clone . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Race . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Cultivar . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Morpha . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Abberatio . }
+                </RestrictTo>
+            </SourceDataset>
+
+            <TargetDataset dataSource="geospecies" var="b">
+                <RestrictTo>
+					?b rdf:type gs:SpeciesConcept .
+                </RestrictTo>
+            </TargetDataset>
+
+			<LinkageRule linkType="skos:closeMatch">
+				<Compare metric="jaro" threshold="0.07">
+
+					<TransformInput function="taxrefNormalizeNoDate">
+						<Input path="?a/skosxl:prefLabel/skosxl:literalForm"/>
+					</TransformInput>
+
+					<TransformInput function="taxrefNormalizeNoDate">
+						<Input path="?b/gs:hasCanonicalName"/>
+					</TransformInput>
+
+				</Compare>
+			</LinkageRule>
+
+		</Interlink>
+	</Interlinks>
+  
+	<Outputs>
+		<Output type="file">
+			<Param name="file" value="links-geospecies-5.1-jaro-name.nt"/>
+			<Param name="format" value="N-Triples"/>
+		</Output>
+	</Outputs>
+	
+</Silk>
+

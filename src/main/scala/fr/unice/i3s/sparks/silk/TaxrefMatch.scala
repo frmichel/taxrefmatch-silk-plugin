@@ -84,35 +84,35 @@ object TaxrefMatch {
     tmpName = normalizeSpaces(tmpName).trim
 
     tmpName = tmpName.replaceAll(""" L\.$""", " Linnaeus")
-    tmpName = tmpName.replaceAllLiterally("(L.)", "(Linnaeus)")
-    tmpName = tmpName.replaceAllLiterally("L., 1", "Linnaeus, 1")
-    tmpName = tmpName.replaceAllLiterally("L. 1", "Linnaeus, 1")
-    tmpName = tmpName.replaceAllLiterally("Linné", "Linnaeus")
-    tmpName = tmpName.replaceAllLiterally("linné", "Linnaeus")
+    tmpName = tmpName.replace("(L.)", "(Linnaeus)")
+    tmpName = tmpName.replace("L., 1", "Linnaeus, 1")
+    tmpName = tmpName.replace("L. 1", "Linnaeus, 1")
+    tmpName = tmpName.replace("Linné", "Linnaeus")
+    tmpName = tmpName.replace("linné", "Linnaeus")
 
     tmpName = tmpName.replaceAll(""" D\.C\.$""", " de Candolle")
-    tmpName = tmpName.replaceAllLiterally("(D.C.)", "(de Candolle)")
-    tmpName = tmpName.replaceAllLiterally("D.C., 1", "de Candolle, 1")
-    tmpName = tmpName.replaceAllLiterally("D.C. 1", "de Candolle, 1")
+    tmpName = tmpName.replace("(D.C.)", "(de Candolle)")
+    tmpName = tmpName.replace("D.C., 1", "de Candolle, 1")
+    tmpName = tmpName.replace("D.C. 1", "de Candolle, 1")
 
     // Normalize "et", "and" to ampersand (leave "et al" as is)
-    tmpName = tmpName.replaceAllLiterally(" et al", " __ETAL_MARKER__")
-    tmpName = tmpName.replaceAllLiterally(" et ", " & ")
-    tmpName = tmpName.replaceAllLiterally(" and ", " & ")
-    tmpName = tmpName.replaceAllLiterally(" __ETAL_MARKER__", " et al")
+    tmpName = tmpName.replace(" et al", " __ETAL_MARKER__")
+    tmpName = tmpName.replace(" et ", " & ")
+    tmpName = tmpName.replace(" and ", " & ")
+    tmpName = tmpName.replace(" __ETAL_MARKER__", " et al")
 
     // Remove commas before dates (only)
-    tmpName = tmpName.replaceAllLiterally(", 17", " 17")
-    tmpName = tmpName.replaceAllLiterally(",17", " 17")
-    tmpName = tmpName.replaceAllLiterally(", 18", " 18")
-    tmpName = tmpName.replaceAllLiterally(",18", " 18")
-    tmpName = tmpName.replaceAllLiterally(", 19", " 19")
-    tmpName = tmpName.replaceAllLiterally(",19", " 19")
-    tmpName = tmpName.replaceAllLiterally(", 20", " 20")
-    tmpName = tmpName.replaceAllLiterally(",20", " 20")
+    tmpName = tmpName.replace(", 17", " 17")
+    tmpName = tmpName.replace(",17", " 17")
+    tmpName = tmpName.replace(", 18", " 18")
+    tmpName = tmpName.replace(",18", " 18")
+    tmpName = tmpName.replace(", 19", " 19")
+    tmpName = tmpName.replace(",19", " 19")
+    tmpName = tmpName.replace(", 20", " 20")
+    tmpName = tmpName.replace(",20", " 20")
 
     tmpName = normalizeSpaces(tmpName).trim
-    tmpName = tmpName.replaceAllLiterally("-", " ")
+    tmpName = tmpName.replace("-", " ")
 
     tmpName
   }
@@ -155,13 +155,13 @@ object TaxrefMatch {
     tmpName = tmpName.toUpperCase
 
     // Replace any HTML ampersands
-    tmpName = tmpName.replaceAllLiterally("&AMP;", "&")
+    tmpName = tmpName.replace("&AMP;", "&")
 
     // Replace special characters
     // See list of UTF-16 codes at http://www.fileformat.info/info/charset/UTF-16/list.htm
-    tmpName = tmpName.replaceAllLiterally("\u00df", "BETA") // lowercase beta: ß
-    tmpName = tmpName.replaceAllLiterally("\u03b2", "BETA") // lowercase beta: β
-    tmpName = tmpName.replaceAllLiterally("\u0392", "BETA") // uppercase beta: Β
+    tmpName = tmpName.replace("\u00df", "BETA") // lowercase beta: ß
+    tmpName = tmpName.replace("\u03b2", "BETA") // lowercase beta: β
+    tmpName = tmpName.replace("\u0392", "BETA") // uppercase beta: Β
 
     tmpName = tmpName.map(x => x match {
       case '\u2026' => ' ' // ellipsis (three dots in one): …
@@ -189,20 +189,20 @@ object TaxrefMatch {
     tmpName = extractBracketTerm(tmpName)
 
     // Drop indicators of questionable id's, subspecies, varieties
-    /* tmpName = tmpName.replaceAllLiterally(" CF ", " ")
-    tmpName = tmpName.replaceAllLiterally(" CF. ", " ")
-    tmpName = tmpName.replaceAllLiterally(" NEAR ", " ")
-    tmpName = tmpName.replaceAllLiterally(" AFF ", " ")
-    tmpName = tmpName.replaceAllLiterally(" AFF. ", " ") */
-    tmpName = tmpName.replaceAllLiterally(" SP.", " ")
-    tmpName = tmpName.replaceAllLiterally(" SPP.", " ")
-    tmpName = tmpName.replaceAllLiterally(" SPP ", " ")
-    tmpName = tmpName.replaceAllLiterally(" SSP.", " ")
-    tmpName = tmpName.replaceAllLiterally(" SUBSP.", " ")
-    tmpName = tmpName.replaceAllLiterally(" F. ", " ")
-    tmpName = tmpName.replaceAllLiterally(" VAR. ", " ")
-    tmpName = tmpName.replaceAllLiterally(" FORM ", " ")
-    tmpName = tmpName.replaceAllLiterally(" SUVAR. ", " ")
+    /* tmpName = tmpName.replace(" CF ", " ")
+    tmpName = tmpName.replace(" CF. ", " ")
+    tmpName = tmpName.replace(" NEAR ", " ")
+    tmpName = tmpName.replace(" AFF ", " ")
+    tmpName = tmpName.replace(" AFF. ", " ") */
+    tmpName = tmpName.replace(" SP.", " ")
+    tmpName = tmpName.replace(" SPP.", " ")
+    tmpName = tmpName.replace(" SPP ", " ")
+    tmpName = tmpName.replace(" SSP.", " ")
+    tmpName = tmpName.replace(" SUBSP.", " ")
+    tmpName = tmpName.replace(" F. ", " ")
+    tmpName = tmpName.replace(" VAR. ", " ")
+    tmpName = tmpName.replace(" FORM ", " ")
+    tmpName = tmpName.replace(" SUVAR. ", " ")
 
     // Replace any accented characters
     tmpName = tmpName.map(x => x match {
@@ -263,7 +263,7 @@ object TaxrefMatch {
     // Reduce any new multiple internal spaces to single space
     tmpName = normalizeSpaces(tmpName).trim
 
-    //logger.log(Level.FINE, "Normalized [" + name + "] into [" + tmpName + "]")
+    //logger.log(Level.INFO, "Normalized [" + name + "] into [" + tmpName + "]")
     tmpName
   }
 }

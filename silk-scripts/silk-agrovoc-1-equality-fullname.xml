@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Silk>
+    <!-- Compare the normalized full name (name + authirity) -->
+    <Prefixes>
+        <Prefix id="rdf"     namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        <Prefix id="rdfs"     namespace="http://www.w3.org/2000/01/rdf-schema#"/>
+        <Prefix id="skos"     namespace="http://www.w3.org/2004/02/skos/core#"/>
+        <Prefix id="skosxl"    namespace="http://www.w3.org/2008/05/skos-xl#"/>
+
+        <Prefix id="taxrefrk" namespace="http://taxref.mnhn.fr/lod/taxrank#"/>
+        <Prefix id="nt"     namespace="http://purl.obolibrary.org/obo/ncbitaxon#"/>
+        <Prefix id="ao"     namespace="http://aims.fao.org/aos/agrontology#"/>
+        <Prefix id="agrv"     namespace="http://aims.fao.org/aos/agrovoc/"/>
+    </Prefixes>
+
+    <DataSources>
+        <Dataset id="taxref" type="file">
+          <Param name="file" value="TAXREF-SKOS/Taxref10.ttl"/>
+          <Param name="format" value="TURTLE"/>
+        </Dataset>
+
+        <Dataset id="agrovoc" type="file">
+          <Param name="file" value="ReferenceOntologies/agrovoc_2016-07-15_lod.nt"/>
+          <Param name="format" value="N-TRIPLE"/>
+        </Dataset>
+    </DataSources>
+  
+    <Interlinks>
+    
+        <Interlink id="taxref">
+
+            <SourceDataset dataSource="taxref" var="a">
+                <RestrictTo>
+                    ?a rdf:type skos:Concept .
+                    { ?a nt:has_rank taxrefrk:Genus . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubGenus . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Section . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSection . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Series . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSeries . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Agregate . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Species . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SemiSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:MicroSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Natio . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Varietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubVarietas . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Forma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:SubForma . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:FormaSpecies . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Linea . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Clone . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Race . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Cultivar . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Morpha . }
+                    UNION
+                    { ?a nt:has_rank taxrefrk:Abberatio . }
+                </RestrictTo>
+            </SourceDataset>
+
+            <TargetDataset dataSource="agrovoc" var="b">
+                <RestrictTo>
+                    ?b rdf:type skos:Concept .
+                    { ?b ao:hasTaxonomicRank agrv:c_11125 . }
+                    UNION
+                    { ?b ao:hasTaxonomicRank agrv:c_331243 . }
+                    UNION
+                    { ?b ao:hasTaxonomicRank agrv:c_16047 . }
+                    UNION
+                    { ?b ao:hasTaxonomicRank agrv:c_1423211760123 . }
+                </RestrictTo>
+            </TargetDataset>
+
+            <LinkageRule linkType="skos:exactMatch">
+                <Compare metric="equality">
+
+                    <TransformInput function="taxrefNormalize">
+                        <Input path="?a/skos:prefLabel"/>
+                    </TransformInput>
+
+                    <TransformInput function="taxrefNormalize">
+                        <TransformInput function="concat">
+                            <Input path="?b/skos:prefLabel[@lang = 'en']"/>
+                            <TransformInput function="replace">
+                                <Input path="?b/skos:editorialNote[@lang = 'en']"/>
+                                <Param name="search" value="Author:" />
+                                <Param name="replace" value=" " />
+                            </TransformInput>
+                            <Param name="glue" value=" " />
+                        </TransformInput>
+                    </TransformInput>
+
+                </Compare>
+            </LinkageRule>
+
+        </Interlink>
+    </Interlinks>
+  
+    <Outputs>
+        <Output type="file">
+            <Param name="file" value="links-agrovoc-1-equality-fullname.nt"/>
+            <Param name="format" value="N-Triples"/>
+        </Output>
+    </Outputs>
+    
+</Silk>
+  
