@@ -7,6 +7,5 @@ class CustomPlugins extends PluginModule {
   override def pluginClasses =
     classOf[TaxrefNormalize] ::
     classOf[TaxrefNormalizeNoDate] ::
-    classOf[TaxrefNormalizeAuthor] ::
     Nil
 }

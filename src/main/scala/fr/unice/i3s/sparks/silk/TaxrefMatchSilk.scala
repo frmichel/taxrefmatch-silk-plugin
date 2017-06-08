@@ -2,6 +2,7 @@ package fr.unice.i3s.sparks.silk
 
 import org.silkframework.runtime.plugin.Plugin
 import org.silkframework.rule.input.SimpleTransformer
+import java.lang.StringBuffer
 
 @Plugin(
   id = "taxrefNormalize",
@@ -23,12 +24,3 @@ case class TaxrefNormalizeNoDate() extends SimpleTransformer {
   }
 }
 
-@Plugin(
-  id = "taxrefNormalizeAuthor",
-  label = "TAXREF-MATCH normalize author",
-  description = "Normalize the authority part of a taxon name")
-case class TaxrefNormalizeAuthor() extends SimpleTransformer {
-  override def evaluate(value: String) = {
-    TaxrefMatch.normalizeAuthor(value)
-  }
-}
