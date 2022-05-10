@@ -5,3 +5,5 @@ TAXREF proposes a set of [services](https://taxref.mnhn.fr/taxref-web/), among w
 
 ## The TAXREF-MATCH SILK plugin
 This project is a port in Scala of the algorithm at the core of the TAXREF-MATCH service. It is implemented as a [SILK](https://github.com/silk-framework/silk) plugin.
+
+Use with no later than Java 8.

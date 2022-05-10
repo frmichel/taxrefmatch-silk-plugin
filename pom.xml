@@ -24,8 +24,8 @@
 	<developers>
 		<developer>
 			<name>Franck Michel</name>
-			<email>franck.michel@cnrs.fr</email>
-			<organization>CNRS</organization>
+			<email>fmichel@i3s.unice.fr</email>
+			<organization>University Côte d'Azur, CNRS, Inria</organization>
 			<timezone>Europe/Paris</timezone>
 		</developer>
 	</developers>
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 
